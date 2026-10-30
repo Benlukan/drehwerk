@@ -11,7 +11,7 @@ Jede Reihe, jede Spalte und jeder Block muss jede Zahl genau einmal enthalten. D
 - **Freies Spiel** – 4×4, 6×6 oder 9×9, jedes Mal neu gemischt
 
 **Par** = Anzahl Drehungen, mit denen das Rätsel gemischt wurde. ★★★ in Par ohne Tipp, ★★ bis doppeltes Par, sonst ★.
-**Tipp** zeigt die nächste Drehung auf dem Lösungsweg – oder wie viele Züge du zurücknehmen musst.
+**Tipp** zeigt immer die nächste Drehung vom aktuellen Stand aus – auf dem kürzesten bekannten Weg zur Lösung.
 
 Steuerung: Ziehen mit Finger/Maus · am PC Feld anklicken + Pfeiltasten (Umschalt+Pfeil = Auswahl bewegen), Z = zurück, R = Neustart, H = Tipp.
 
@@ -43,4 +43,4 @@ npx cap open ios       # Xcode (macOS)
 ```
 
 ## Version
-Aktuell **v1.0.0 · Build 1** – siehe [CHANGELOG.md](CHANGELOG.md). Bei jeder Auslieferung Version + Build hochzählen in: `www/index.html` (Footer), `package.json`, `android/app/build.gradle`, `ios/App/App.xcodeproj/project.pbxproj`, `www/sw.js` (Cache-Name).
+Aktuell **v1.0.1 · Build 2** – siehe [CHANGELOG.md](CHANGELOG.md). Bei jeder Auslieferung Version + Build hochzählen in: `www/index.html` (Footer), `package.json`, `android/app/build.gradle`, `ios/App/App.xcodeproj/project.pbxproj`, `www/sw.js` (Cache-Name).

@@ -100,7 +100,7 @@ footer{color:var(--muted);font-size:11px;opacity:.7}
     <button id="resetBtn" title="Zur Ausgangslage (R)">⟲ Neustart</button>
     <button id="hintBtn" title="Tipp (H)">💡 Tipp</button>
   </div>
-  <footer>DREHWERK v1.0.0 · Build 1 · david.digital</footer>
+  <footer>DREHWERK v1.0.1 · Build 2 · david.digital</footer>
 </div>
 
 <div class="overlay" id="startOv">
@@ -367,17 +367,41 @@ function resetPuzzle(){
   if(!hist.length||solved||anim)return;
   g=copy(startG);hist=[];hintMv=null;tone(220,.12,'triangle',.05);afterChange();
 }
+function allMoves(){const o=[];for(const t of['r','c'])for(let i=0;i<N;i++)for(let k=1;k<N;k++)o.push({t,i,k});return o}
+// Bester nächster Zug vom aktuellen Stand aus (kürzeste bekannte Restlänge)
+function bestHint(){
+  const curKey=keyOf(g);let best=null;
+  const consider=(cost,move)=>{if(move&&(!best||cost<best.cost))best={cost,move}};
+  // 1) Stand liegt auf dem Misch-Weg
+  const idx=pathIdx.get(curKey);
+  if(idx>0)consider(idx,inv(scr[idx-1]));
+  // 2) eigener Verlauf: Rückweg als normale Drehung, bis der Misch-Weg erreicht ist
+  const states=[startG];for(const m of hist)states.push(apply(states[states.length-1],m));
+  const cur=states.findIndex(st=>keyOf(st)===curKey);
+  for(let j=cur-1;j>=0;j--){const q=pathIdx.get(keyOf(states[j]));if(q!==undefined)consider(cur-j+q,inv(hist[cur-1]))}
+  // 3) Vorwärtssuche vom aktuellen Stand: direkte Lösung oder Abkürzung auf den Misch-Weg
+  const depth=N===4?3:2,moves=allMoves();
+  let frontier=[{a:g,first:null}];const seen=new Set([curKey]);
+  for(let d=1;d<=depth;d++){
+    if(best&&d>=best.cost)break;
+    const next=[];
+    for(const f of frontier)for(const m of moves){
+      const b=apply(f.a,m),k=keyOf(b);if(seen.has(k))continue;seen.add(k);
+      const first=f.first||m;
+      if(check(b).solved){consider(d,first);continue}
+      const q=pathIdx.get(k);if(q!==undefined)consider(d+q,first);
+      if(d<depth)next.push({a:b,first});
+    }
+    frontier=next;
+  }
+  return best;
+}
 function hint(){
   if(solved||anim)return;
   startClock();
-  const idx=pathIdx.get(keyOf(g));
-  hints++;
-  if(idx>0){hintMv=inv(scr[idx-1]);hintT=performance.now();draw();toast('Tipp: markierte Linie drehen');return}
-  // Abseits des Lösungswegs: wie viele Züge zurück?
-  let a=copy(g),back=0;
-  for(let j=hist.length-1;j>=0;j--){a=apply(a,inv(hist[j]));back++;if(pathIdx.has(keyOf(a))&&pathIdx.get(keyOf(a))>0||j===0)break}
-  toast(`Tipp: nimm ${back} ${back===1?'Zug':'Züge'} zurück`);
-  const u=$('undoBtn');u.classList.add('flash');setTimeout(()=>u.classList.remove('flash'),1600);
+  const h=bestHint();if(!h)return;
+  hints++;hintMv=h.move;hintT=performance.now();draw();
+  toast(`Tipp: markierte ${h.move.t==='r'?'Reihe':'Spalte'} drehen · noch ${h.cost<=1?'1 Zug':'höchstens '+h.cost+' Züge'}`);
 }
 let toastTO;
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toastTO);toastTO=setTimeout(()=>e.classList.remove('show'),2200)}
@@ -518,7 +542,7 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>draw());
 
 newGame('levels');inGame=false;openMenu();
 if('serviceWorker' in navigator&&location.protocol==='https:'&&!window.Capacitor){try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
-window.__dw={apply,check,doMove,undo,hint,get state(){return{N,par,moves:hist.length,solved,mode,level,grid:copy(g),scr:scr.slice(),hints}}};
+window.__dw={apply,check,doMove,undo,hint,get state(){return{N,par,moves:hist.length,solved,mode,level,grid:copy(g),scr:scr.slice(),hints,hintMv}}};
 })();
 </script>
 </body>

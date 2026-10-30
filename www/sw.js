@@ -1,5 +1,5 @@
 // DREHWERK Service Worker – offline spielbar
-const CACHE = 'drehwerk-v1.0.0-b1';
+const CACHE = 'drehwerk-v1.0.1-b2';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
