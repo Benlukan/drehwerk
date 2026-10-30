@@ -15,6 +15,20 @@ Jede Reihe, jede Spalte und jeder Block muss jede Zahl genau einmal enthalten. D
 
 Steuerung: Ziehen mit Finger/Maus · am PC Feld anklicken + Pfeiltasten (Umschalt+Pfeil = Auswahl bewegen), Z = zurück, R = Neustart, H = Tipp.
 
+## Werbung (nur Android-/iOS-App)
+Google AdMob über `@capacitor-community/admob`. Die Web-Version und das Tagesrätsel bleiben werbefrei, Banner gibt es keine.
+- **Tipps:** 1 Tipp pro Rätsel gratis, jeder weitere per freiwilligem Belohnungs-Video. Ist kein Video verfügbar (offline), gibt es den Tipp gratis.
+- **Vollbild-Werbung:** nach jedem 3. gelösten Rätsel beim Weiterklicken, in den Stufen erst ab Stufe 5, nie während eines Rätsels.
+- **Einwilligung:** Googles Einwilligungsfenster (UMP, zertifizierte CMP) beim ersten Start; Änderung über „Werbe-Einstellungen“ im Menü. iOS fragt zusätzlich nach Tracking (ATT).
+
+Aktuell laufen **Google-Test-IDs**. Für echte Werbung:
+1. AdMob-Konto anlegen, zwei Apps (Android + iOS) und je zwei Werbeblöcke anlegen (Interstitial, Rewarded).
+2. App-IDs eintragen: `android/app/src/main/res/values/strings.xml` (`admob_app_id`) und `ios/App/App/Info.plist` (`GADApplicationIdentifier`).
+3. Werbeblock-IDs in `www/index.html` → `const ADS` eintragen und `testing:false` setzen.
+4. In AdMob die Datenschutz-Meldung (DSGVO) für die Apps veröffentlichen, sonst erscheint kein Einwilligungsfenster.
+5. `app-ads.txt` auf der Entwickler-Website hinterlegen.
+6. Play Console: „Enthält Werbung: Ja“; Datensicherheit: Geräte-IDs (Werbe-ID) erhoben und geteilt, Zweck Werbung. Datenschutzerklärung: `www/datenschutz.html` (Name/Adresse/E-Mail eintragen).
+
 ## Projektstruktur
 | Pfad | Inhalt |
 |---|---|
@@ -43,4 +57,4 @@ npx cap open ios       # Xcode (macOS)
 ```
 
 ## Version
-Aktuell **v1.0.1 · Build 2** – siehe [CHANGELOG.md](CHANGELOG.md). Bei jeder Auslieferung Version + Build hochzählen in: `www/index.html` (Footer), `package.json`, `android/app/build.gradle`, `ios/App/App.xcodeproj/project.pbxproj`, `www/sw.js` (Cache-Name).
+Aktuell **v1.1.0 · Build 3** – siehe [CHANGELOG.md](CHANGELOG.md). Bei jeder Auslieferung Version + Build hochzählen in: `www/index.html` (Footer), `package.json`, `android/app/build.gradle`, `ios/App/App.xcodeproj/project.pbxproj`, `www/sw.js` (Cache-Name).

@@ -1,6 +1,6 @@
 {
   "name": "drehwerk",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": true,
   "description": "DREHWERK – Sudoku trifft Zauberwürfel",
   "scripts": {
@@ -9,6 +9,7 @@
     "icons": "capacitor-assets generate --iconBackgroundColor '#0d0f1a' --iconBackgroundColorDark '#0d0f1a' --splashBackgroundColor '#0d0f1a' --splashBackgroundColorDark '#0d0f1a'"
   },
   "dependencies": {
+    "@capacitor-community/admob": "^8.3.0",
     "@capacitor/android": "^8.6.0",
     "@capacitor/core": "^8.6.0",
     "@capacitor/ios": "^8.6.0",

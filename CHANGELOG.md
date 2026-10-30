@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1.0 (Build 3) – 30.10.2026
+- Werbung in der Android-/iOS-App über Google AdMob (vorerst Test-IDs); Web-Version und Tagesrätsel bleiben werbefrei
+  - 1 Tipp pro Rätsel gratis, weitere per freiwilligem Video (ohne verfügbares Video gratis)
+  - Vollbild-Werbung nach jedem 3. gelösten Rätsel, in den Stufen erst ab Stufe 5, nie mitten im Rätsel
+  - Einwilligungsfenster (Google UMP) beim ersten Start, „Werbe-Einstellungen“ im Menü; iOS-Tracking-Abfrage
+- Neue Datenschutzerklärung (`datenschutz.html`), Link im Menü und in der Fußzeile
+- Schrift liegt jetzt lokal in der App (keine Verbindung zu Google Fonts)
+
 ## v1.0.1 (Build 2) – 30.10.2026
 - Tipp geht jetzt immer vom aktuellen Stand aus: zeigt die nächste Drehung auf dem kürzesten bekannten Weg (Vorwärtssuche + Abkürzungen), kein „Züge zurücknehmen“ mehr
 - Tipp nennt die Restlänge („noch höchstens X Züge“)

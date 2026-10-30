@@ -13,9 +13,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <style>
+@font-face{font-family:"Space Grotesk";font-weight:500;font-display:swap;src:url(fonts/space-grotesk-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Space Grotesk";font-weight:700;font-display:swap;src:url(fonts/space-grotesk-latin-700-normal.woff2) format("woff2")}
 :root{
   --bg:#0d0f1a; --panel:#161a2b; --line:#262b45; --text:#e9ecff; --muted:#8a90b8;
   --ok:#3ddc97; --acc:#ffc145; --acc2:#4cc9f0; --bad:#ff5d73;
@@ -100,7 +100,7 @@ footer{color:var(--muted);font-size:11px;opacity:.7}
     <button id="resetBtn" title="Zur Ausgangslage (R)">⟲ Neustart</button>
     <button id="hintBtn" title="Tipp (H)">💡 Tipp</button>
   </div>
-  <footer>DREHWERK v1.0.1 · Build 2 · david.digital</footer>
+  <footer>DREHWERK v1.1.0 · Build 3 · david.digital · <a href="datenschutz.html" style="color:inherit">Datenschutz</a></footer>
 </div>
 
 <div class="overlay" id="startOv">
@@ -124,6 +124,7 @@ footer{color:var(--muted);font-size:11px;opacity:.7}
     <button class="btn alt sm" data-free="6">6×6</button>
     <button class="btn alt sm" data-free="9">9×9</button>
   </div>
+  <p class="hint"><a href="datenschutz.html" style="color:inherit">Datenschutz</a><span id="adPrivWrap" style="display:none"> · <a href="#" id="adPrivBtn" style="color:inherit">Werbe-Einstellungen</a></span></p>
 </div>
 
 <div class="overlay hidden" id="winOv">
@@ -233,7 +234,7 @@ function newGame(m){
   $('modeTag').textContent=mode==='daily'?'Täglich #'+dailyNo():mode==='levels'?'Stufen':'Frei';
   $('infoLabel').textContent=mode==='levels'?'Stufe':'Größe';
   $('info').textContent=mode==='levels'?level:n+'×'+n;
-  layout();hud();
+  layout();hud();updHintBtn();
 }
 function levelSpec(L){
   if(L<=5)return{n:4,par:[1,2,2,3,3][L-1]};
@@ -413,6 +414,7 @@ function win(){
   [523,659,784,1047].forEach((f,i)=>tone(f,.18,'sine',.07,i*.09));
   const b=document.createElement('div');b.className='banner';b.textContent='GELÖST!';$('boardWrap').appendChild(b);setTimeout(()=>b.remove(),1300);
   const s=starsFor(),mv=hist.length,t=elapsed();
+  if(mode!=='daily'){solvedCount++;ls.set('solvedCount',solvedCount)}
   let txt=`${mv} ${mv===1?'Zug':'Züge'} · Par ${par} · ${fmt(t)}`+(hints?` · ${hints} Tipp${hints>1?'s':''}`:'');
   $('stars').textContent='★'.repeat(s)+'☆'.repeat(3-s);
   $('shareBox').style.display='none';$('shareBtn').style.display='none';$('nextBtn').style.display='none';$('countdown').textContent='';
@@ -488,7 +490,7 @@ document.addEventListener('keydown',e=>{
   }
   const k=e.key;
   if(k==='z'||k==='Z'||((e.ctrlKey||e.metaKey)&&k==='z')){e.preventDefault();undo();return}
-  if(k==='h'||k==='H'){hint();return}
+  if(k==='h'||k==='H'){hintClicked();return}
   if(k==='r'||k==='R'){resetPuzzle();return}
   if(k==='Escape'){openMenu();return}
   const dir={ArrowLeft:['r',-1],ArrowRight:['r',1],ArrowUp:['c',-1],ArrowDown:['c',1]}[k];
@@ -503,6 +505,70 @@ document.addEventListener('keydown',e=>{
     doMove({t,i,k:mod(step,N)});
   }};draw();
 });
+
+// ---------- Werbung (nur Android-/iOS-App, nie im Web, nie im Tagesrätsel) ----------
+// Bis das AdMob-Konto steht: Google-Test-IDs. Danach echte Werbeblock-IDs eintragen und testing:false setzen.
+const ADS={
+  testing:true,
+  android:{interstitial:'ca-app-pub-3940256099942544/1033173712',reward:'ca-app-pub-3940256099942544/5224354917'},
+  ios:{interstitial:'ca-app-pub-3940256099942544/4411468910',reward:'ca-app-pub-3940256099942544/1712485313'},
+  freeHints:1,          // Tipps pro Rätsel ohne Video (Stufen / Frei)
+  interstitialEvery:3,  // Vollbild-Werbung nach jedem 3. gelösten Rätsel …
+  firstLevelWithAds:5   // … aber erst ab dieser Stufe
+};
+const Cap=window.Capacitor;
+const AdMob=Cap&&Cap.isNativePlatform&&Cap.isNativePlatform()&&((Cap.Plugins&&Cap.Plugins.AdMob)||(Cap.registerPlugin&&Cap.registerPlugin('AdMob')));
+const adIds=AdMob?(Cap.getPlatform()==='ios'?ADS.ios:ADS.android):null;
+const ad={ready:false,reward:false,inter:false,earned:false,onClose:null};
+async function loadReward(){if(!ad.ready)return;ad.reward=false;try{await AdMob.prepareRewardVideoAd({adId:adIds.reward,isTesting:ADS.testing});ad.reward=true}catch(e){}updHintBtn()}
+async function loadInter(){if(!ad.ready)return;ad.inter=false;try{await AdMob.prepareInterstitial({adId:adIds.interstitial,isTesting:ADS.testing});ad.inter=true}catch(e){}}
+async function startAds(){
+  if(!AdMob)return;
+  try{
+    let ci=await AdMob.requestConsentInfo();
+    if(ci.isConsentFormAvailable&&ci.status==='REQUIRED')ci=await AdMob.showConsentForm();
+    $('adPrivWrap').style.display=ci.privacyOptionsRequirementStatus==='REQUIRED'?'':'none';
+    if(!ci.canRequestAds)return;
+    if(Cap.getPlatform()==='ios'){try{const t=await AdMob.trackingAuthorizationStatus();if(t.status==='notDetermined')await AdMob.requestTrackingAuthorization()}catch(e){}}
+    await AdMob.initialize({initializeForTesting:ADS.testing});
+    const close=()=>{const f=ad.onClose;ad.onClose=null;if(f)f()};
+    AdMob.addListener('onRewardedVideoAdReward',()=>{ad.earned=true});
+    AdMob.addListener('onRewardedVideoAdDismissed',close);AdMob.addListener('onRewardedVideoAdFailedToShow',close);
+    AdMob.addListener('interstitialAdDismissed',close);AdMob.addListener('interstitialAdFailedToShow',close);
+    ad.ready=true;loadReward();loadInter();
+  }catch(e){}
+}
+// Zeigt eine Anzeige und wartet, bis sie geschlossen ist. Ergebnis: Belohnung verdient?
+function showAd(kind){
+  return new Promise(res=>{
+    ad.earned=false;const wasRunning=running;stopClock();
+    const done=()=>{if(wasRunning&&inGame&&!solved)startClock();res(ad.earned);kind==='reward'?loadReward():loadInter()};
+    ad.onClose=done;
+    setTimeout(()=>{if(ad.onClose===done){ad.onClose=null;done()}},90000); // Sicherheitsnetz
+    const p=kind==='reward'?AdMob.showRewardVideoAd():AdMob.showInterstitial();
+    p.then(()=>{if(kind==='reward')ad.earned=true}).catch(()=>{if(ad.onClose===done){ad.onClose=null;done()}});
+  });
+}
+const hintNeedsVideo=()=>ad.ready&&mode!=='daily'&&hints>=ADS.freeHints;
+function updHintBtn(){$('hintBtn').textContent=hintNeedsVideo()&&ad.reward?'🎬 Tipp':'💡 Tipp'}
+async function hintClicked(){
+  if(solved||anim)return;
+  if(hintNeedsVideo()){
+    if(ad.reward){
+      const ok=await showAd('reward');
+      if(!ok){toast('Video abgebrochen – kein Tipp');return}
+    } // kein Video verfügbar (offline o. Ä.) → Tipp gratis
+  }
+  hint();updHintBtn();
+}
+let solvedCount=ls.get('solvedCount',0);
+async function maybeInterstitial(){
+  if(!ad.ready||!ad.inter||mode==='daily')return;
+  if(mode==='levels'&&level<ADS.firstLevelWithAds)return;
+  if(solvedCount%ADS.interstitialEvery!==0)return;
+  await showAd('inter');
+}
+$('adPrivBtn').onclick=e=>{e.preventDefault();if(AdMob)AdMob.showPrivacyOptionsForm().catch(()=>{})};
 
 // ---------- Menü ----------
 function openMenu(){
@@ -520,11 +586,11 @@ $('dailyBtn').onclick=()=>go('daily');
 $('levelsBtn').onclick=()=>go('levels');
 document.querySelectorAll('[data-free]').forEach(b=>b.onclick=()=>{freeN=+b.dataset.free;go('free')});
 $('resumeBtn').onclick=()=>{paused=false;$('startOv').classList.add('hidden');if(hist.length)startClock()};
-$('nextBtn').onclick=()=>go(mode);
-$('againBtn').onclick=()=>{if(mode==='levels'&&solved){level=Math.max(1,level-1)}go(mode)};
+$('nextBtn').onclick=async()=>{await maybeInterstitial();go(mode)};
+$('againBtn').onclick=async()=>{if(mode==='levels'&&solved){level=Math.max(1,level-1)}await maybeInterstitial();go(mode)};
 $('menuBtn').onclick=()=>{inGame=false;openMenu()};
 $('helpBtn').onclick=openMenu;
-$('undoBtn').onclick=undo;$('resetBtn').onclick=resetPuzzle;$('hintBtn').onclick=hint;
+$('undoBtn').onclick=undo;$('resetBtn').onclick=resetPuzzle;$('hintBtn').onclick=hintClicked;
 $('shareBtn').onclick=async()=>{
   const txt=$('shareBox').textContent,b=$('shareBtn'),C=window.Capacitor;
   const Native=C&&C.isNativePlatform&&C.isNativePlatform()&&((C.Plugins&&C.Plugins.Share)||(C.registerPlugin&&C.registerPlugin('Share')));
@@ -541,8 +607,9 @@ window.addEventListener('resize',layout);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>draw());
 
 newGame('levels');inGame=false;openMenu();
+setTimeout(startAds,600);
 if('serviceWorker' in navigator&&location.protocol==='https:'&&!window.Capacitor){try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
-window.__dw={apply,check,doMove,undo,hint,get state(){return{N,par,moves:hist.length,solved,mode,level,grid:copy(g),scr:scr.slice(),hints,hintMv}}};
+window.__dw={ad,ADS,hintClicked,maybeInterstitial,apply,check,doMove,undo,hint,get state(){return{N,par,moves:hist.length,solved,mode,level,grid:copy(g),scr:scr.slice(),hints,hintMv}}};
 })();
 </script>
 </body>
