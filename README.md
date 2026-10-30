@@ -13,7 +13,9 @@ Jede Reihe, jede Spalte und jeder Block muss jede Zahl genau einmal enthalten. D
 **Par** = Anzahl Drehungen, mit denen das Rätsel gemischt wurde. ★★★ in Par ohne Tipp, ★★ bis doppeltes Par, sonst ★.
 **Tipp** zeigt immer die nächste Drehung vom aktuellen Stand aus – auf dem kürzesten bekannten Weg zur Lösung.
 
-Steuerung: Ziehen mit Finger/Maus · am PC Feld anklicken + Pfeiltasten (Umschalt+Pfeil = Auswahl bewegen), Z = zurück, R = Neustart, H = Tipp.
+Einstellungen (⚙): Ton, Vibration, Animationstempo, Farben (Bunt/Farbsicher/Grau), Zahlen an/aus, Fortschritts-Anzeige, Stufen zurücksetzen.
+
+Steuerung: Ziehen mit Finger/Maus · am PC Feld anklicken + Pfeiltasten (Umschalt+Pfeil = Auswahl bewegen), Z = zurück, R = Neustart, H = Tipp, Esc = Menü.
 
 ## Werbung (nur Android-/iOS-App)
 Google AdMob über `@capacitor-community/admob`. Die Web-Version und das Tagesrätsel bleiben werbefrei, Banner gibt es keine.
@@ -57,4 +59,4 @@ npx cap open ios       # Xcode (macOS)
 ```
 
 ## Version
-Aktuell **v1.1.0 · Build 3** – siehe [CHANGELOG.md](CHANGELOG.md). Bei jeder Auslieferung Version + Build hochzählen in: `www/index.html` (Footer), `package.json`, `android/app/build.gradle`, `ios/App/App.xcodeproj/project.pbxproj`, `www/sw.js` (Cache-Name).
+Aktuell **v1.2.0 · Build 4** – siehe [CHANGELOG.md](CHANGELOG.md). Bei jeder Auslieferung Version + Build hochzählen in: `www/index.html` (Footer), `package.json`, `android/app/build.gradle`, `ios/App/App.xcodeproj/project.pbxproj`, `www/sw.js` (Cache-Name).

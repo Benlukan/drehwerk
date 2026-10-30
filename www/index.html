@@ -26,13 +26,30 @@ html,body{margin:0;height:100%;background:radial-gradient(1200px 800px at 50% -1
 .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:14px;
   padding-top:max(14px,env(safe-area-inset-top));padding-bottom:max(14px,env(safe-area-inset-bottom))}
 .col{width:min(92vw,440px,calc(100dvh - 290px));min-width:280px}
-header{display:flex;align-items:flex-end;justify-content:space-between}
-h1{margin:0;font-size:26px;letter-spacing:.18em;font-weight:700;white-space:nowrap}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{margin:0;font-size:clamp(19px,5.6vw,26px);letter-spacing:.18em;font-weight:700;white-space:nowrap}
 h1 span{color:var(--acc)}
 .mode-tag{font-size:10px;letter-spacing:.1em;color:var(--acc2);text-transform:uppercase;margin-left:8px;vertical-align:middle}
 .icons{display:flex;gap:8px}
 .icon-btn{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:10px;width:38px;height:38px;font-size:17px;cursor:pointer;font-family:inherit}
 .icon-btn:hover{color:var(--text)}
+.back-btn{width:auto;padding:0 12px;font-size:14px;font-weight:700;color:var(--text);letter-spacing:.04em}
+.titlebox{display:flex;align-items:center;gap:10px;min-width:0}
+.settings{display:flex;flex-direction:column;width:min(100%,360px);background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.set{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:0;border-bottom:1px solid var(--line);
+  background:none;color:var(--text);font:500 15px "Space Grotesk",sans-serif;text-align:left;text-decoration:none;cursor:pointer}
+.set:last-child{border-bottom:0}
+.set.danger{color:#ff8a9a}
+.set.off{opacity:.45;pointer-events:none}
+.set input[type=checkbox]{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;cursor:pointer;transition:background .2s;flex:none;margin:0}
+.set input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
+.set input[type=checkbox]:checked{background:var(--ok)}
+.set input[type=checkbox]:checked::after{transform:translateX(18px)}
+.set small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.seg{display:flex;background:#0d1020;border-radius:9px;padding:3px;gap:2px;flex:none}
+.seg button{background:none;border:0;color:var(--muted);font:700 12px "Space Grotesk",sans-serif;padding:6px 9px;border-radius:7px;cursor:pointer}
+.seg button.on{background:var(--line);color:var(--text)}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font:500 12px "Space Grotesk",sans-serif;cursor:pointer;padding:0}
 .hud{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:7px 10px}
 .stat small{display:block;color:var(--muted);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
@@ -79,10 +96,12 @@ footer{color:var(--muted);font-size:11px;opacity:.7}
 <body>
 <div class="wrap">
   <header class="col">
-    <h1>DREH<span>WERK</span><small class="mode-tag" id="modeTag"></small></h1>
+    <div class="titlebox">
+      <button class="icon-btn back-btn" id="backBtn" title="Zurück ins Menü (Esc)">‹ Menü</button>
+      <h1>DREH<span>WERK</span><small class="mode-tag" id="modeTag"></small></h1>
+    </div>
     <div class="icons">
-      <button class="icon-btn" id="soundBtn" title="Ton an/aus">🔊</button>
-      <button class="icon-btn" id="helpBtn" title="Menü &amp; Anleitung">?</button>
+      <button class="icon-btn" id="settingsBtn" title="Einstellungen">⚙</button>
     </div>
   </header>
   <div class="hud col">
@@ -100,7 +119,7 @@ footer{color:var(--muted);font-size:11px;opacity:.7}
     <button id="resetBtn" title="Zur Ausgangslage (R)">⟲ Neustart</button>
     <button id="hintBtn" title="Tipp (H)">💡 Tipp</button>
   </div>
-  <footer>DREHWERK v1.1.0 · Build 3 · david.digital · <a href="datenschutz.html" style="color:inherit">Datenschutz</a></footer>
+  <footer>DREHWERK v1.2.0 · Build 4 · david.digital · <a href="datenschutz.html" style="color:inherit">Datenschutz</a></footer>
 </div>
 
 <div class="overlay" id="startOv">
@@ -124,7 +143,27 @@ footer{color:var(--muted);font-size:11px;opacity:.7}
     <button class="btn alt sm" data-free="6">6×6</button>
     <button class="btn alt sm" data-free="9">9×9</button>
   </div>
-  <p class="hint"><a href="datenschutz.html" style="color:inherit">Datenschutz</a><span id="adPrivWrap" style="display:none"> · <a href="#" id="adPrivBtn" style="color:inherit">Werbe-Einstellungen</a></span></p>
+  <p class="hint" style="margin-top:6px"><button class="linkbtn" id="menuSettings">⚙ Einstellungen</button> · <a href="datenschutz.html" style="color:inherit">Datenschutz</a></p>
+</div>
+
+<div class="overlay hidden" id="settingsOv">
+  <h2>⚙ EINSTELLUNGEN</h2>
+  <div class="settings">
+    <label class="set"><span>🔊 Ton</span><input type="checkbox" id="setSound"></label>
+    <label class="set"><span>📳 Vibration</span><input type="checkbox" id="setVibe"></label>
+    <div class="set"><span>⚡ Animation</span><div class="seg" data-key="speed"><button data-v="normal">Normal</button><button data-v="fast">Schnell</button></div></div>
+  </div>
+  <div class="settings">
+    <div class="set"><span>🎨 Farben</span><div class="seg" data-key="palette"><button data-v="std">Bunt</button><button data-v="cb">Farbsicher</button><button data-v="mono">Grau</button></div></div>
+    <label class="set" id="rowNumbers"><span>🔢 Zahlen auf Steinen<small>Aus = nur nach Farben spielen</small></span><input type="checkbox" id="setNumbers"></label>
+    <label class="set"><span>🟩 Fortschritts-Anzeige<small>Grüne Randmarken und Blockrahmen</small></span><input type="checkbox" id="setMarks"></label>
+  </div>
+  <div class="settings">
+    <button class="set danger" id="resetLevels">↺ Stufen-Fortschritt löschen</button>
+    <button class="set" id="privacyBtn" style="display:none">🛡 Werbe-Einstellungen (Einwilligung)</button>
+    <a class="set" href="datenschutz.html">📄 Datenschutzerklärung</a>
+  </div>
+  <button class="btn alt" id="closeSettings">FERTIG</button>
 </div>
 
 <div class="overlay hidden" id="winOv">
@@ -159,7 +198,27 @@ let sound=true,S=0,M=0,cell=0,raf=0;
 
 const ls={get(k,d){try{const v=localStorage.getItem(KEY+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
           set(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v))}catch(e){}}};
-level=ls.get('level',1); sound=ls.get('sound',true);
+level=ls.get('level',1);
+const DEF_SET={sound:true,vibe:true,speed:'normal',palette:'std',numbers:true,marks:true};
+let settings={...DEF_SET,...ls.get('settings',{})};
+{const old=ls.get('sound',null);if(old===false&&!ls.get('settings',null))settings.sound=false}
+const PALS={
+  std:PAL.slice(),
+  cb:['#e69f00','#56b4e9','#009e73','#f0e442','#0072b2','#d55e00','#cc79a7','#b8b8b8','#f4f4f4'],
+  mono:Array(9).fill('#c9cde6')
+};
+let COLS=PALS.std;
+function applySettings(){sound=settings.sound;COLS=PALS[settings.palette]||PALS.std;if(settings.palette==='mono')settings.numbers=true;if(S)draw()}
+function saveSettings(){ls.set('settings',settings)}
+const animDur=()=>settings.speed==='fast'?60:110;
+function haptic(kind){
+  if(!settings.vibe)return;
+  const C=window.Capacitor,H=C&&C.isNativePlatform&&C.isNativePlatform()&&((C.Plugins&&C.Plugins.Haptics)||(C.registerPlugin&&C.registerPlugin('Haptics')));
+  try{
+    if(H){kind==='win'?H.notification({type:'SUCCESS'}):H.impact({style:kind==='medium'?'MEDIUM':'LIGHT'});return}
+    if(navigator.vibrate)navigator.vibrate(kind==='win'?[30,50,30,50,60]:kind==='medium'?25:10);
+  }catch(e){}
+}
 
 // ---------- Zufall ----------
 function mulberry32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -276,12 +335,14 @@ function layout(){
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
 function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,gg=n>>8&255,b=n&255;
   const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);gg=Math.round((t-gg)*p+gg);b=Math.round((t-b)*p+b);return`rgb(${r},${gg},${b})`}
+function lum(hex){const n=parseInt(hex.slice(1),16);return(.299*(n>>16)+.587*(n>>8&255)+.114*(n&255))/255}
 function drawTile(x,y,v,sc=1){
-  const gap=Math.max(2,cell*.06),w=(cell-2*gap)*sc,ox=x+(cell-w)/2,oy=y+(cell-w)/2,rad=w*.2,col=PAL[v];
+  const gap=Math.max(2,cell*.06),w=(cell-2*gap)*sc,ox=x+(cell-w)/2,oy=y+(cell-w)/2,rad=w*.2,col=COLS[v];
   const gr=ctx.createLinearGradient(0,oy,0,oy+w);gr.addColorStop(0,shade(col,.22));gr.addColorStop(1,shade(col,-.12));
   ctx.fillStyle=gr;rr(ox,oy,w,w,rad);ctx.fill();
   ctx.fillStyle='rgba(0,0,0,.16)';rr(ox,oy+w*.86,w,w*.14,Math.min(rad,w*.07));ctx.fill();
-  ctx.fillStyle='rgba(20,16,40,.72)';ctx.font=`700 ${Math.round(w*.5)}px "Space Grotesk",system-ui,sans-serif`;
+  if(!settings.numbers)return;
+  ctx.fillStyle=lum(col)<.42?'rgba(255,255,255,.92)':'rgba(20,16,40,.72)';ctx.font=`700 ${Math.round(w*.5)}px "Space Grotesk",system-ui,sans-serif`;
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(v+1,ox+w/2,oy+w/2+w*.02);
 }
 function curOffset(){
@@ -299,7 +360,7 @@ function draw(){
   const IW=N*cell;
   ctx.fillStyle='#101323';rr(M-2,M-2,IW+4,IW+4,10);ctx.fill();
   // Randmarken
-  const mk=(x,y,w,h,ok)=>{ctx.fillStyle=ok?'#3ddc97':'#2b3150';rr(x,y,w,h,Math.min(w,h)/2);ctx.fill()};
+  const mk=(x,y,w,h,ok)=>{ctx.fillStyle=ok&&settings.marks?'#3ddc97':'#2b3150';rr(x,y,w,h,Math.min(w,h)/2);ctx.fill()};
   const mw=Math.max(3,M*.3),ml=cell*.46;
   for(let i=0;i<N;i++){
     const c=M+i*cell+(cell-ml)/2;
@@ -322,7 +383,7 @@ function draw(){
   // Blockrahmen
   let b=0;
   for(let by=0;by<N/BR;by++)for(let bx2=0;bx2<N/BC;bx2++,b++){
-    ctx.strokeStyle=st.boxes[b]?'rgba(61,220,151,.95)':'rgba(233,236,255,.28)';ctx.lineWidth=st.boxes[b]?2.5:2;
+    const bok=st.boxes[b]&&settings.marks;ctx.strokeStyle=bok?'rgba(61,220,151,.95)':'rgba(233,236,255,.28)';ctx.lineWidth=bok?2.5:2;
     rr(M+bx2*BC*cell+1.5,M+by*BR*cell+1.5,BC*cell-3,BR*cell-3,8);ctx.stroke();
   }
   // Auswahl (Tastatur)
@@ -356,7 +417,7 @@ function doMove(m,animated){
 }
 function afterChange(){
   const st=check(g);
-  if(st.ok>lastOk)tone(520+st.ok*12,.12,'sine',.06);
+  if(st.ok>lastOk){tone(520+st.ok*12,.12,'sine',.06);if(!st.solved)haptic('medium')}
   lastOk=st.ok;hud();draw();
   if(st.solved)win();
 }
@@ -411,7 +472,7 @@ function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');cle
 function starsFor(){const mv=hist.length;let s=mv<=par?3:mv<=par*2?2:1;if(hints)s=Math.min(s,2);return s}
 function win(){
   solved=true;stopClock();sel=null;hintMv=null;winT=performance.now();hud();draw();
-  [523,659,784,1047].forEach((f,i)=>tone(f,.18,'sine',.07,i*.09));
+  [523,659,784,1047].forEach((f,i)=>tone(f,.18,'sine',.07,i*.09));haptic('win');
   const b=document.createElement('div');b.className='banner';b.textContent='GELÖST!';$('boardWrap').appendChild(b);setTimeout(()=>b.remove(),1300);
   const s=starsFor(),mv=hist.length,t=elapsed();
   if(mode!=='daily'){solvedCount++;ls.set('solvedCount',solvedCount)}
@@ -466,7 +527,7 @@ cv.addEventListener('pointermove',e=>{
   }
   const off=(drag.axis==='r'?dx:dy)/cell;
   const prev=Math.round(drag.off);drag.off=off;
-  if(Math.round(off)!==prev)tone(700,.02,'square',.015);
+  if(Math.round(off)!==prev){tone(700,.02,'square',.015);haptic('light')}
   draw();
 });
 function endDrag(e){
@@ -474,7 +535,7 @@ function endDrag(e){
   const d=drag;cv.classList.remove('dragging');
   if(!d.axis){drag=null;sel={r:d.r,c:d.c};draw();return}
   const to=Math.round(d.off);
-  anim={t:d.axis,i:d.i,from:d.off,to,t0:performance.now(),dur:110,done:()=>{
+  anim={t:d.axis,i:d.i,from:d.off,to,t0:performance.now(),dur:animDur(),done:()=>{
     const k=mod(to,N);if(k)doMove({t:d.axis,i:d.i,k});else draw();
   }};
   drag=null;draw();
@@ -484,6 +545,7 @@ cv.addEventListener('pointercancel',endDrag);
 
 // ---------- Eingabe: Tastatur ----------
 document.addEventListener('keydown',e=>{
+  if(!$('settingsOv').classList.contains('hidden')){if(e.key==='Escape')closeSettings();return}
   if(!$('startOv').classList.contains('hidden')||!$('winOv').classList.contains('hidden')){
     if(e.key==='Enter'&&!$('winOv').classList.contains('hidden'))($('nextBtn').style.display==='none'?$('againBtn'):$('nextBtn')).click();
     return;
@@ -500,7 +562,7 @@ document.addEventListener('keydown',e=>{
   if(e.shiftKey){ // Auswahl bewegen, ohne zu drehen
     if(dir[0]==='r')sel.c=mod(sel.c+dir[1],N);else sel.r=mod(sel.r+dir[1],N);draw();return}
   const t=dir[0],i=t==='r'?sel.r:sel.c,step=dir[1];
-  anim={t,i,from:0,to:step,t0:performance.now(),dur:110,done:()=>{
+  anim={t,i,from:0,to:step,t0:performance.now(),dur:animDur(),done:()=>{
     if(t==='r')sel.c=mod(sel.c+step,N);else sel.r=mod(sel.r+step,N);
     doMove({t,i,k:mod(step,N)});
   }};draw();
@@ -527,7 +589,7 @@ async function startAds(){
   try{
     let ci=await AdMob.requestConsentInfo();
     if(ci.isConsentFormAvailable&&ci.status==='REQUIRED')ci=await AdMob.showConsentForm();
-    $('adPrivWrap').style.display=ci.privacyOptionsRequirementStatus==='REQUIRED'?'':'none';
+    ad.privacy=ci.privacyOptionsRequirementStatus==='REQUIRED';
     if(!ci.canRequestAds)return;
     if(Cap.getPlatform()==='ios'){try{const t=await AdMob.trackingAuthorizationStatus();if(t.status==='notDetermined')await AdMob.requestTrackingAuthorization()}catch(e){}}
     await AdMob.initialize({initializeForTesting:ADS.testing});
@@ -568,7 +630,7 @@ async function maybeInterstitial(){
   if(solvedCount%ADS.interstitialEvery!==0)return;
   await showAd('inter');
 }
-$('adPrivBtn').onclick=e=>{e.preventDefault();if(AdMob)AdMob.showPrivacyOptionsForm().catch(()=>{})};
+$('privacyBtn').onclick=()=>{if(AdMob)AdMob.showPrivacyOptionsForm().catch(()=>{})};
 
 // ---------- Menü ----------
 function openMenu(){
@@ -589,7 +651,42 @@ $('resumeBtn').onclick=()=>{paused=false;$('startOv').classList.add('hidden');if
 $('nextBtn').onclick=async()=>{await maybeInterstitial();go(mode)};
 $('againBtn').onclick=async()=>{if(mode==='levels'&&solved){level=Math.max(1,level-1)}await maybeInterstitial();go(mode)};
 $('menuBtn').onclick=()=>{inGame=false;openMenu()};
-$('helpBtn').onclick=openMenu;
+$('backBtn').onclick=()=>{if(anim)return;openMenu()};
+// ---------- Einstellungen ----------
+let settingsFrom=null,resetArm=false;
+function renderSettings(){
+  $('setSound').checked=settings.sound;$('setVibe').checked=settings.vibe;$('setNumbers').checked=settings.numbers;
+  $('setMarks').checked=settings.marks;
+  $('rowNumbers').classList.toggle('off',settings.palette==='mono');
+  document.querySelectorAll('#settingsOv .seg').forEach(sg=>sg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',settings[sg.dataset.key]===b.dataset.v)));
+  $('privacyBtn').style.display=ad.privacy?'':'none';
+  $('resetLevels').textContent='↺ Stufen-Fortschritt löschen (Stufe '+level+')';resetArm=false;
+}
+function openSettings(from){
+  settingsFrom=from;
+  if(from==='play'&&inGame&&!solved){paused=true;stopClock()}
+  renderSettings();$('startOv').classList.add('hidden');$('winOv').classList.add('hidden');$('settingsOv').classList.remove('hidden');
+}
+function closeSettings(){
+  $('settingsOv').classList.add('hidden');
+  if(settingsFrom==='play'&&inGame&&!solved){paused=false;if(hist.length)startClock();draw()}
+  else if(settingsFrom==='win'&&solved)$('winOv').classList.remove('hidden');
+  else openMenu();
+}
+const SETMAP={setSound:'sound',setVibe:'vibe',setNumbers:'numbers',setMarks:'marks'};
+Object.keys(SETMAP).forEach(id=>$(id).onchange=e=>{
+  settings[SETMAP[id]]=e.target.checked;saveSettings();applySettings();
+  if(id==='setSound'&&settings.sound)tone(660,.1,'triangle',.06);if(id==='setVibe'&&settings.vibe)haptic('medium')});
+document.querySelectorAll('#settingsOv .seg').forEach(sg=>sg.onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  settings[sg.dataset.key]=b.dataset.v;saveSettings();applySettings();renderSettings()});
+$('resetLevels').onclick=()=>{
+  if(!resetArm){resetArm=true;$('resetLevels').textContent='⚠ Wirklich? Nochmal tippen';setTimeout(()=>{if(resetArm)renderSettings()},3000);return}
+  level=1;ls.set('level',1);ls.set('stars',{});resetArm=false;$('resetLevels').textContent='✓ Gelöscht – zurück auf Stufe 1';
+  if(mode==='levels'&&inGame&&!solved&&settingsFrom==='play')settingsFrom='menu',inGame=false;
+};
+$('settingsBtn').onclick=()=>{if(anim)return;openSettings(solved&&!$('winOv').classList.contains('hidden')?'win':inGame&&!solved?'play':'menu')};
+$('menuSettings').onclick=()=>openSettings('menu');
+$('closeSettings').onclick=closeSettings;
 $('undoBtn').onclick=undo;$('resetBtn').onclick=resetPuzzle;$('hintBtn').onclick=hintClicked;
 $('shareBtn').onclick=async()=>{
   const txt=$('shareBox').textContent,b=$('shareBtn'),C=window.Capacitor;
@@ -600,16 +697,24 @@ $('shareBtn').onclick=async()=>{
   catch(e){const r=document.createRange();r.selectNodeContents($('shareBox'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='TEXT MARKIERT – KOPIEREN'}
   setTimeout(()=>b.textContent='ERGEBNIS TEILEN',2000);
 };
-const sb=$('soundBtn');sb.textContent=sound?'🔊':'🔇';
-sb.onclick=()=>{sound=!sound;sb.textContent=sound?'🔊':'🔇';ls.set('sound',sound)};
+// ---------- Android-Zurück-Taste ----------
+(()=>{const C=window.Capacitor,A=C&&C.isNativePlatform&&C.isNativePlatform()&&((C.Plugins&&C.Plugins.App)||(C.registerPlugin&&C.registerPlugin('App')));
+  if(!A)return;
+  A.addListener('backButton',()=>{
+    if(!$('settingsOv').classList.contains('hidden'))closeSettings();
+    else if(!$('winOv').classList.contains('hidden')){inGame=false;openMenu()}
+    else if(!$('startOv').classList.contains('hidden')){if(paused&&inGame&&!solved)$('resumeBtn').click();else A.exitApp()}
+    else openMenu();
+  });
+})();
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&inGame&&!solved){stopClock()}else if(!document.hidden&&inGame&&!solved&&!paused&&hist.length){startClock()}});
 window.addEventListener('resize',layout);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>draw());
 
-newGame('levels');inGame=false;openMenu();
+applySettings();newGame('levels');inGame=false;openMenu();
 setTimeout(startAds,600);
 if('serviceWorker' in navigator&&location.protocol==='https:'&&!window.Capacitor){try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
-window.__dw={ad,ADS,hintClicked,maybeInterstitial,apply,check,doMove,undo,hint,get state(){return{N,par,moves:hist.length,solved,mode,level,grid:copy(g),scr:scr.slice(),hints,hintMv}}};
+window.__dw={get settings(){return settings},openSettings,closeSettings,ad,ADS,hintClicked,maybeInterstitial,apply,check,doMove,undo,hint,get state(){return{N,par,moves:hist.length,solved,mode,level,grid:copy(g),scr:scr.slice(),hints,hintMv}}};
 })();
 </script>
 </body>

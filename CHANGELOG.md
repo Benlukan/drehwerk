@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.2.0 (Build 4) – 30.10.2026
+- Neu: **Einstellungen** (⚙ oben rechts und im Menü)
+  - Ton, Vibration (Haptik in der App), Animation Normal/Schnell
+  - Farben: Bunt / Farbsicher (für Farbsehschwäche) / Grau (reines Zahlen-Sudoku)
+  - Zahlen auf Steinen an/aus (nur nach Farben spielen), Fortschritts-Anzeige an/aus
+  - Stufen-Fortschritt löschen (mit Bestätigung), Werbe-Einstellungen, Datenschutzerklärung
+- Neu: **„‹ Menü“-Knopf** oben links – pausiert das Rätsel, „Weiter“ setzt es fort
+- Android: Zurück-Taste führt ins Menü bzw. schließt Einstellungen; im Menü beendet sie die App
+- Einstellungen werden gespeichert; bisherige Ton-Einstellung wird übernommen
+
 ## v1.1.0 (Build 3) – 30.10.2026
 - Werbung in der Android-/iOS-App über Google AdMob (vorerst Test-IDs); Web-Version und Tagesrätsel bleiben werbefrei
   - 1 Tipp pro Rätsel gratis, weitere per freiwilligem Video (ohne verfügbares Video gratis)
