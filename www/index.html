@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>DREHWERK</title>
+<meta name="description" content="Sudoku trifft Zauberwürfel: Drehe Reihen und Spalten, bis jede Zahl passt. Mit täglichem Rätsel.">
+<meta name="theme-color" content="#0d0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DREHWERK">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f1a; --panel:#161a2b; --line:#262b45; --text:#e9ecff; --muted:#8a90b8;
+  --ok:#3ddc97; --acc:#ffc145; --acc2:#4cc9f0; --bad:#ff5d73;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:radial-gradient(1200px 800px at 50% -10%,#2a2140 0%,var(--bg) 60%);color:var(--text);
+  font-family:"Space Grotesk",system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:14px;
+  padding-top:max(14px,env(safe-area-inset-top));padding-bottom:max(14px,env(safe-area-inset-bottom))}
+.col{width:min(92vw,440px,calc(100dvh - 290px));min-width:280px}
+header{display:flex;align-items:flex-end;justify-content:space-between}
+h1{margin:0;font-size:26px;letter-spacing:.18em;font-weight:700;white-space:nowrap}
+h1 span{color:var(--acc)}
+.mode-tag{font-size:10px;letter-spacing:.1em;color:var(--acc2);text-transform:uppercase;margin-left:8px;vertical-align:middle}
+.icons{display:flex;gap:8px}
+.icon-btn{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:10px;width:38px;height:38px;font-size:17px;cursor:pointer;font-family:inherit}
+.icon-btn:hover{color:var(--text)}
+.hud{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:7px 10px}
+.stat small{display:block;color:var(--muted);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.stat b{font-size:19px;font-variant-numeric:tabular-nums}
+.stat b.over{color:var(--bad)}
+.board-wrap{position:relative;aspect-ratio:1}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas.dragging{cursor:grabbing}
+.toast{position:absolute;left:50%;bottom:18%;transform:translateX(-50%);background:rgba(13,16,32,.94);box-shadow:0 6px 24px #000a;border:1px solid var(--line);
+  color:var(--text);font-size:13px;padding:6px 12px;border-radius:10px;white-space:nowrap;opacity:0;transition:opacity .25s;pointer-events:none;z-index:4}
+.toast.show{opacity:1}
+.banner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:38px;font-weight:700;letter-spacing:.1em;
+  pointer-events:none;text-shadow:0 0 24px var(--ok);animation:banner 1.2s ease-out forwards;z-index:6;white-space:nowrap}
+@keyframes banner{0%{transform:translate(-50%,-50%) scale(.6);opacity:0}20%{transform:translate(-50%,-50%) scale(1.05);opacity:1}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%)}}
+.tools{display:flex;gap:8px}
+.tools button{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:12px;height:44px;
+  font:600 14px "Space Grotesk",sans-serif;letter-spacing:.04em;cursor:pointer}
+.tools button:disabled{opacity:.4;cursor:default}
+.tools button.flash{border-color:var(--acc);box-shadow:0 0 14px #ffc14566}
+.overlay{position:fixed;inset:0;background:rgba(10,12,22,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;justify-content:safe center;text-align:center;
+  padding:max(26px,env(safe-area-inset-top)) 22px max(26px,env(safe-area-inset-bottom));z-index:10;gap:10px}
+.overlay.hidden{display:none}
+.overlay h2{margin:0;font-size:30px;letter-spacing:.14em}
+.overlay h2 span{color:var(--acc)}
+.overlay p{margin:0;color:var(--muted);line-height:1.5;font-size:14px;max-width:330px}
+.overlay .big{font-size:40px;letter-spacing:.1em}
+.rules{display:grid;grid-template-columns:auto 1fr;gap:7px 12px;text-align:left;font-size:14px;color:var(--muted);margin:6px 0;max-width:340px}
+.rules b{color:var(--text);text-align:center}
+.btn{background:var(--acc);color:#1a1300;border:0;border-radius:12px;padding:12px 24px;font:700 15px "Space Grotesk",sans-serif;
+  letter-spacing:.06em;cursor:pointer;margin-top:4px}
+.btn:hover{filter:brightness(1.1)}
+.btn.alt{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.alt:hover{border-color:var(--acc)}
+.btn.sm{padding:9px 16px;font-size:14px}
+.modes{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.share{margin:0;background:#0d1020;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font:13px/1.45 ui-monospace,monospace;
+  color:var(--text);text-align:left;white-space:pre-wrap;user-select:text;-webkit-user-select:text;max-width:100%}
+.hint{color:var(--muted);font-size:12px}
+footer{color:var(--muted);font-size:11px;opacity:.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="col">
+    <h1>DREH<span>WERK</span><small class="mode-tag" id="modeTag"></small></h1>
+    <div class="icons">
+      <button class="icon-btn" id="soundBtn" title="Ton an/aus">🔊</button>
+      <button class="icon-btn" id="helpBtn" title="Menü &amp; Anleitung">?</button>
+    </div>
+  </header>
+  <div class="hud col">
+    <div class="stat"><small>Züge</small><b id="moves">0</b></div>
+    <div class="stat"><small>Par</small><b id="par">0</b></div>
+    <div class="stat"><small>Zeit</small><b id="time">0:00</b></div>
+    <div class="stat"><small id="infoLabel">Stufe</small><b id="info">1</b></div>
+  </div>
+  <div class="board-wrap col" id="boardWrap">
+    <canvas id="cv"></canvas>
+    <div class="toast" id="toast"></div>
+  </div>
+  <div class="tools col">
+    <button id="undoBtn" title="Letzten Zug zurücknehmen (Z)">↶ Zurück</button>
+    <button id="resetBtn" title="Zur Ausgangslage (R)">⟲ Neustart</button>
+    <button id="hintBtn" title="Tipp (H)">💡 Tipp</button>
+  </div>
+  <footer>DREHWERK v1.0.0 · Build 1 · david.digital</footer>
+</div>
+
+<div class="overlay" id="startOv">
+  <h2>DREH<span>WERK</span></h2>
+  <div class="rules">
+    <b>1–9</b><span>Jede <b>Reihe</b>, jede <b>Spalte</b> und jeder dick umrandete <b>Block</b> enthält jede Zahl genau einmal – wie beim Sudoku.</span>
+    <b>⇄ ⇅</b><span>Ziehe eine Reihe seitwärts oder eine Spalte hoch/runter. Sie dreht sich ringförmig wie eine Würfelscheibe.</span>
+    <b>▮</b><span>Grüne Marken am Rand zeigen fertige Reihen und Spalten, grüne Rahmen fertige Blöcke.</span>
+    <b>Par</b><span>So viele Züge wurden zum Verdrehen gebraucht. Schaffst du es in Par: ★★★</span>
+  </div>
+  <p class="hint">Am PC: Feld anklicken, dann Pfeiltasten · Z = zurück · H = Tipp</p>
+  <button class="btn" id="resumeBtn" style="display:none">WEITER</button>
+  <div class="modes">
+    <button class="btn" id="dailyBtn">📅 TAGESRÄTSEL</button>
+    <button class="btn alt" id="levelsBtn">▶ STUFEN</button>
+  </div>
+  <p class="hint" id="dailyHint"></p>
+  <div class="label">Freies Spiel</div>
+  <div class="modes">
+    <button class="btn alt sm" data-free="4">4×4</button>
+    <button class="btn alt sm" data-free="6">6×6</button>
+    <button class="btn alt sm" data-free="9">9×9</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="winOv">
+  <h2>GELÖST</h2>
+  <div class="big" id="stars">★★★</div>
+  <p id="winText"></p>
+  <pre class="share" id="shareBox" style="display:none"></pre>
+  <button class="btn" id="shareBtn" style="display:none">ERGEBNIS TEILEN</button>
+  <button class="btn" id="nextBtn">NÄCHSTE STUFE</button>
+  <div class="modes">
+    <button class="btn alt" id="againBtn">NOCHMAL</button>
+    <button class="btn alt" id="menuBtn">MENÜ</button>
+  </div>
+  <p class="hint" id="countdown"></p>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const cv=$('cv'), ctx=cv.getContext('2d');
+const BOX={4:[2,2],6:[2,3],9:[3,3]};            // [Blockhöhe, Blockbreite]
+const PAL=['#ff5d73','#ffc145','#3ddc97','#4cc9f0','#b57bff','#ff8a3d','#f772d0','#a3e05a','#6c8cff'];
+const FREE_PAR={4:3,6:5,9:6};
+const SHARE_URL='https://benlukan.github.io/drehwerk/';
+const KEY='drehwerk_';
+
+// ---------- Zustand ----------
+let N=6,BR=2,BC=3,g=[],startG=[],par=0,pathIdx=new Map(),scr=[],hist=[],hints=0;
+let tAcc=0,tStart=0,running=false,solved=false,inGame=false,paused=false;
+let mode='levels',level=1,freeN=6,sel=null,hintMv=null,hintT=0,drag=null,anim=null,winT=0,lastOk=0;
+let sound=true,S=0,M=0,cell=0,raf=0;
+
+const ls={get(k,d){try{const v=localStorage.getItem(KEY+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+          set(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v))}catch(e){}}};
+level=ls.get('level',1); sound=ls.get('sound',true);
+
+// ---------- Zufall ----------
+function mulberry32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hashStr(s){let h=2166136261;for(const ch of s){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function todayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function dailyNo(){const[y,m,d]=todayKey().split('-').map(Number);return Math.round((Date.UTC(y,m-1,d)-Date.UTC(2026,9,30))/864e5)+1}
+function dailySpec(){return new Date().getDay()===0?{n:9,par:5,sunday:true}:{n:6,par:5}}
+function shuffle(a,rnd){for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const range=n=>[...Array(n).keys()];
+
+// ---------- Gitter-Logik ----------
+function solvedGrid(n,rnd){
+  const [br,bc]=BOX[n];
+  const base=(r,c)=>(bc*(r%br)+Math.floor(r/br)+c)%n;
+  const sym=shuffle(range(n),rnd);
+  const rows=[].concat(...shuffle(range(n/br),rnd).map(b=>shuffle(range(br),rnd).map(i=>b*br+i)));
+  const cols=[].concat(...shuffle(range(n/bc),rnd).map(s=>shuffle(range(bc),rnd).map(i=>s*bc+i)));
+  return rows.map(r=>cols.map(c=>sym[base(r,c)]));
+}
+const copy=a=>a.map(r=>r.slice());
+const keyOf=a=>a.map(r=>r.join('')).join('|');
+const mod=(a,n)=>((a%n)+n)%n;
+function apply(a,m){
+  const b=copy(a),n=a.length;
+  for(let x=0;x<n;x++){
+    if(m.t==='r') b[m.i][mod(x+m.k,n)]=a[m.i][x];
+    else b[mod(x+m.k,n)][m.i]=a[x][m.i];
+  }
+  return b;
+}
+const inv=m=>({t:m.t,i:m.i,k:mod(-m.k,N)});
+function check(a){
+  const n=a.length,[br,bc]=BOX[n];
+  const full=arr=>new Set(arr).size===n;
+  const rows=range(n).map(i=>full(a[i]));
+  const cols=range(n).map(j=>full(a.map(r=>r[j])));
+  const boxes=[];
+  for(let by=0;by<n/br;by++)for(let bx=0;bx<n/bc;bx++){
+    const v=[];for(let y=0;y<br;y++)for(let x=0;x<bc;x++)v.push(a[by*br+y][bx*bc+x]);
+    boxes.push(full(v));
+  }
+  const ok=rows.filter(Boolean).length+cols.filter(Boolean).length+boxes.filter(Boolean).length;
+  return {rows,cols,boxes,ok,solved:ok===3*n};
+}
+function scramble(sol,k,rnd){
+  const n=sol.length;let a=sol,last=null;
+  const seen=new Map([[keyOf(a),0]]),mv=[];
+  for(let s=0;s<k;s++){
+    for(let tries=0;tries<200;tries++){
+      const m={t:rnd()<.5?'r':'c',i:Math.floor(rnd()*n),k:1+Math.floor(rnd()*(n-1))};
+      if(last&&last.t===m.t&&last.i===m.i)continue;
+      const b=apply(a,m),kk=keyOf(b);
+      if(seen.has(kk)||check(b).solved)continue;
+      a=b;mv.push(m);seen.set(kk,mv.length);last=m;break;
+    }
+  }
+  return {grid:a,moves:mv,seen};
+}
+
+// ---------- Spielstart ----------
+function newGame(m){
+  mode=m||mode;let n,p,rnd,seedTag;
+  if(mode==='daily'){const d=dailySpec();n=d.n;p=d.par;seedTag='daily-'+todayKey()}
+  else if(mode==='levels'){const d=levelSpec(level);n=d.n;p=d.par;seedTag='level-'+level}
+  else {n=freeN;p=FREE_PAR[n];seedTag=null}
+  rnd=seedTag?mulberry32(hashStr('drehwerk-'+seedTag)):Math.random;
+  N=n;[BR,BC]=BOX[n];
+  const sol=solvedGrid(n,rnd),s=scramble(sol,p,rnd);
+  g=s.grid;startG=copy(g);scr=s.moves;pathIdx=s.seen;par=scr.length;
+  hist=[];hints=0;tAcc=0;running=false;solved=false;sel=null;hintMv=null;drag=null;anim=null;winT=0;
+  lastOk=check(g).ok;inGame=true;paused=false;
+  $('modeTag').textContent=mode==='daily'?'Täglich #'+dailyNo():mode==='levels'?'Stufen':'Frei';
+  $('infoLabel').textContent=mode==='levels'?'Stufe':'Größe';
+  $('info').textContent=mode==='levels'?level:n+'×'+n;
+  layout();hud();
+}
+function levelSpec(L){
+  if(L<=5)return{n:4,par:[1,2,2,3,3][L-1]};
+  if(L<=14)return{n:6,par:[2,3,3,4,4,5,5,6,6][L-6]};
+  return{n:9,par:Math.min(3+Math.floor((L-15)/2),12)};
+}
+
+// ---------- Zeit & HUD ----------
+const elapsed=()=>tAcc+(running?Date.now()-tStart:0);
+const fmt=ms=>{const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function startClock(){if(!running&&!solved){running=true;tStart=Date.now()}}
+function stopClock(){if(running){tAcc+=Date.now()-tStart;running=false}}
+setInterval(()=>{if(running)$('time').textContent=fmt(elapsed())},250);
+function hud(){
+  $('moves').textContent=hist.length;$('moves').className=hist.length>par?'over':'';
+  $('par').textContent=par;$('time').textContent=fmt(elapsed());
+  $('undoBtn').disabled=!hist.length||solved;$('resetBtn').disabled=!hist.length||solved;$('hintBtn').disabled=solved;
+}
+
+// ---------- Ton ----------
+let actx;
+function tone(f,d=.08,type='sine',vol=.07,delay=0){
+  if(!sound)return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const t=actx.currentTime+delay,o=actx.createOscillator(),gn=actx.createGain();
+    o.type=type;o.frequency.setValueAtTime(f,t);
+    gn.gain.setValueAtTime(vol,t);gn.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(gn).connect(actx.destination);o.start(t);o.stop(t+d+.02);
+  }catch(e){}
+}
+
+// ---------- Zeichnen ----------
+function layout(){
+  const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  S=r.width||300;cv.width=Math.round(S*dpr);cv.height=Math.round(S*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
+  M=Math.max(12,S*.04);cell=(S-2*M)/N;draw();
+}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,gg=n>>8&255,b=n&255;
+  const t=f<0?0:255,p=Math.abs(f);r=Math.round((t-r)*p+r);gg=Math.round((t-gg)*p+gg);b=Math.round((t-b)*p+b);return`rgb(${r},${gg},${b})`}
+function drawTile(x,y,v,sc=1){
+  const gap=Math.max(2,cell*.06),w=(cell-2*gap)*sc,ox=x+(cell-w)/2,oy=y+(cell-w)/2,rad=w*.2,col=PAL[v];
+  const gr=ctx.createLinearGradient(0,oy,0,oy+w);gr.addColorStop(0,shade(col,.22));gr.addColorStop(1,shade(col,-.12));
+  ctx.fillStyle=gr;rr(ox,oy,w,w,rad);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.16)';rr(ox,oy+w*.86,w,w*.14,Math.min(rad,w*.07));ctx.fill();
+  ctx.fillStyle='rgba(20,16,40,.72)';ctx.font=`700 ${Math.round(w*.5)}px "Space Grotesk",system-ui,sans-serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(v+1,ox+w/2,oy+w/2+w*.02);
+}
+function curOffset(){
+  if(anim){const p=Math.min(1,(performance.now()-anim.t0)/anim.dur),e=1-Math.pow(1-p,3);return{t:anim.t,i:anim.i,off:anim.from+(anim.to-anim.from)*e}}
+  if(drag&&drag.axis)return{t:drag.axis,i:drag.i,off:drag.off};
+  return null;
+}
+function draw(){
+  if(!S)return;
+  const now=performance.now(),o=curOffset();
+  const preview=o&&Math.round(o.off)%N?apply(g,{t:o.t,i:o.i,k:mod(Math.round(o.off),N)}):g;
+  const st=check(preview);
+  ctx.clearRect(0,0,S,S);
+  ctx.fillStyle='#161a2b';rr(0,0,S,S,18);ctx.fill();ctx.strokeStyle='#262b45';ctx.lineWidth=1;rr(.5,.5,S-1,S-1,18);ctx.stroke();
+  const IW=N*cell;
+  ctx.fillStyle='#101323';rr(M-2,M-2,IW+4,IW+4,10);ctx.fill();
+  // Randmarken
+  const mk=(x,y,w,h,ok)=>{ctx.fillStyle=ok?'#3ddc97':'#2b3150';rr(x,y,w,h,Math.min(w,h)/2);ctx.fill()};
+  const mw=Math.max(3,M*.3),ml=cell*.46;
+  for(let i=0;i<N;i++){
+    const c=M+i*cell+(cell-ml)/2;
+    mk((M-mw)/2-1,c,mw,ml,st.rows[i]);mk(S-M+(M-mw)/2+1,c,mw,ml,st.rows[i]);
+    mk(c,(M-mw)/2-1,ml,mw,st.cols[i]);mk(c,S-M+(M-mw)/2+1,ml,mw,st.cols[i]);
+  }
+  // Steine
+  ctx.save();ctx.beginPath();ctx.rect(M,M,IW,IW);ctx.clip();
+  const wave=winT?(now-winT):0;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    let sc=1;
+    if(winT){const d=wave-(r+c)*45;if(d>0&&d<380)sc=1+.16*Math.sin(d/380*Math.PI)}
+    if(o&&o.t==='r'&&o.i===r){const p=mod(c+o.off,N);drawTile(M+p*cell,M+r*cell,g[r][c],sc);if(p>N-1)drawTile(M+(p-N)*cell,M+r*cell,g[r][c],sc)}
+    else if(o&&o.t==='c'&&o.i===c){const p=mod(r+o.off,N);drawTile(M+c*cell,M+p*cell,g[r][c],sc);if(p>N-1)drawTile(M+c*cell,M+(p-N)*cell,g[r][c],sc)}
+    else drawTile(M+c*cell,M+r*cell,g[r][c],sc);
+  }
+  // aktive Linie hervorheben
+  if(o){ctx.fillStyle='rgba(255,255,255,.06)';if(o.t==='r')ctx.fillRect(M,M+o.i*cell,IW,cell);else ctx.fillRect(M+o.i*cell,M,cell,IW)}
+  ctx.restore();
+  // Blockrahmen
+  let b=0;
+  for(let by=0;by<N/BR;by++)for(let bx2=0;bx2<N/BC;bx2++,b++){
+    ctx.strokeStyle=st.boxes[b]?'rgba(61,220,151,.95)':'rgba(233,236,255,.28)';ctx.lineWidth=st.boxes[b]?2.5:2;
+    rr(M+bx2*BC*cell+1.5,M+by*BR*cell+1.5,BC*cell-3,BR*cell-3,8);ctx.stroke();
+  }
+  // Auswahl (Tastatur)
+  if(sel&&!o&&!solved){ctx.strokeStyle='#ffc145';ctx.lineWidth=2.5;rr(M+sel.c*cell+2,M+sel.r*cell+2,cell-4,cell-4,cell*.2);ctx.stroke()}
+  // Tipp
+  if(hintMv&&!o){
+    const pulse=.35+.25*Math.sin((now-hintT)/180),m=hintMv;
+    ctx.fillStyle=`rgba(255,193,69,${pulse*.45})`;ctx.strokeStyle=`rgba(255,193,69,${.5+pulse})`;ctx.lineWidth=2.5;
+    const k=m.k>N/2?m.k-N:m.k;   // kürzere Richtung
+    let x,y,w,h;if(m.t==='r'){x=M;y=M+m.i*cell;w=IW;h=cell}else{x=M+m.i*cell;y=M;w=cell;h=IW}
+    rr(x+1,y+1,w-2,h-2,10);ctx.fill();ctx.stroke();
+    const arrow=m.t==='r'?(k>0?'→':'←'):(k>0?'↓':'↑');
+    const lbl=arrow+' '+Math.abs(k);ctx.font=`700 ${Math.round(cell*.34)}px "Space Grotesk",sans-serif`;
+    const tw=ctx.measureText(lbl).width+16,th=cell*.5,cx=x+w/2,cy=y+h/2;
+    ctx.fillStyle='#ffc145';rr(cx-tw/2,cy-th/2,tw,th,th/2);ctx.fill();
+    ctx.fillStyle='#1a1300';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(lbl,cx,cy+1);
+  }
+  if(anim||hintMv||(winT&&wave<(2*N)*45+400)){cancelAnimationFrame(raf);raf=requestAnimationFrame(frame)}
+}
+function frame(){
+  if(anim&&performance.now()-anim.t0>=anim.dur){const a=anim;anim=null;if(a.done)a.done()}
+  draw();
+}
+
+// ---------- Züge ----------
+function doMove(m,animated){
+  if(solved)return;
+  g=apply(g,m);hist.push(m);startClock();hintMv=null;
+  tone(330+(m.i*30),.05,'triangle',.05);
+  afterChange();
+}
+function afterChange(){
+  const st=check(g);
+  if(st.ok>lastOk)tone(520+st.ok*12,.12,'sine',.06);
+  lastOk=st.ok;hud();draw();
+  if(st.solved)win();
+}
+function undo(){
+  if(!hist.length||solved||anim)return;
+  const m=hist.pop();g=apply(g,inv(m));hintMv=null;tone(260,.05,'triangle',.04);afterChange();
+}
+function resetPuzzle(){
+  if(!hist.length||solved||anim)return;
+  g=copy(startG);hist=[];hintMv=null;tone(220,.12,'triangle',.05);afterChange();
+}
+function hint(){
+  if(solved||anim)return;
+  startClock();
+  const idx=pathIdx.get(keyOf(g));
+  hints++;
+  if(idx>0){hintMv=inv(scr[idx-1]);hintT=performance.now();draw();toast('Tipp: markierte Linie drehen');return}
+  // Abseits des Lösungswegs: wie viele Züge zurück?
+  let a=copy(g),back=0;
+  for(let j=hist.length-1;j>=0;j--){a=apply(a,inv(hist[j]));back++;if(pathIdx.has(keyOf(a))&&pathIdx.get(keyOf(a))>0||j===0)break}
+  toast(`Tipp: nimm ${back} ${back===1?'Zug':'Züge'} zurück`);
+  const u=$('undoBtn');u.classList.add('flash');setTimeout(()=>u.classList.remove('flash'),1600);
+}
+let toastTO;
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toastTO);toastTO=setTimeout(()=>e.classList.remove('show'),2200)}
+
+// ---------- Sieg ----------
+function starsFor(){const mv=hist.length;let s=mv<=par?3:mv<=par*2?2:1;if(hints)s=Math.min(s,2);return s}
+function win(){
+  solved=true;stopClock();sel=null;hintMv=null;winT=performance.now();hud();draw();
+  [523,659,784,1047].forEach((f,i)=>tone(f,.18,'sine',.07,i*.09));
+  const b=document.createElement('div');b.className='banner';b.textContent='GELÖST!';$('boardWrap').appendChild(b);setTimeout(()=>b.remove(),1300);
+  const s=starsFor(),mv=hist.length,t=elapsed();
+  let txt=`${mv} ${mv===1?'Zug':'Züge'} · Par ${par} · ${fmt(t)}`+(hints?` · ${hints} Tipp${hints>1?'s':''}`:'');
+  $('stars').textContent='★'.repeat(s)+'☆'.repeat(3-s);
+  $('shareBox').style.display='none';$('shareBtn').style.display='none';$('nextBtn').style.display='none';$('countdown').textContent='';
+  if(mode==='levels'){
+    const best=ls.get('stars',{});best[level]=Math.max(best[level]||0,s);ls.set('stars',best);
+    txt=`Stufe ${level} geschafft · `+txt;level++;ls.set('level',level);
+    $('nextBtn').style.display='';$('nextBtn').textContent='STUFE '+level+' ▶';
+  } else if(mode==='daily'){
+    let rec=ls.get('daily_'+todayKey(),null);const first=!rec;
+    if(first){rec={moves:mv,par,time:t,hints,stars:s,trace:shareTrace(),n:N};ls.set('daily_'+todayKey(),rec)}
+    else txt+=' · Übungsrunde (gewertet: '+rec.moves+' Züge)';
+    $('shareBox').textContent=shareText(rec);$('shareBox').style.display='';$('shareBtn').style.display='';
+    countdown();
+  } else {$('nextBtn').style.display='';$('nextBtn').textContent='NEUES RÄTSEL'}
+  $('winText').textContent=txt;
+  setTimeout(()=>{if(solved)$('winOv').classList.remove('hidden')},1100);
+}
+function shareTrace(){
+  const parts=hist.map((m,i)=>i<par?'🟩':i<2*par?'🟨':'🟥');
+  return (parts.length>15?parts.slice(0,15).join('')+'…':parts.join(''))+(hints?' '+'💡'.repeat(Math.min(hints,5)):'');
+}
+function shareText(r){
+  return `DREHWERK #${dailyNo()} · ${r.n}×${r.n}\n${'★'.repeat(r.stars)+'☆'.repeat(3-r.stars)} ${r.moves} Züge (Par ${r.par}) · ${fmt(r.time)}\n${r.trace}\n${SHARE_URL}`;
+}
+let cdTO;
+function countdown(){
+  clearTimeout(cdTO);if($('winOv').classList.contains('hidden')&&!solved)return;
+  const n=new Date(),m=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1),s=Math.floor((m-n)/1000);
+  $('countdown').textContent=`Nächstes Tagesrätsel in ${Math.floor(s/3600)}:${String(Math.floor(s/60)%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  if(mode==='daily')cdTO=setTimeout(countdown,1000);
+}
+
+// ---------- Eingabe: Ziehen ----------
+function cellAt(e){const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+cv.addEventListener('pointerdown',e=>{
+  if(solved||anim||!inGame)return;
+  const p=cellAt(e),c=Math.floor((p.x-M)/cell),r=Math.floor((p.y-M)/cell);
+  if(r<0||c<0||r>=N||c>=N)return;
+  try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  drag={x:p.x,y:p.y,r,c,axis:null,i:0,off:0,id:e.pointerId};
+});
+cv.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerId!==drag.id)return;
+  const p=cellAt(e),dx=p.x-drag.x,dy=p.y-drag.y;
+  if(!drag.axis){
+    if(Math.hypot(dx,dy)<Math.max(8,cell*.15))return;
+    drag.axis=Math.abs(dx)>=Math.abs(dy)?'r':'c';drag.i=drag.axis==='r'?drag.r:drag.c;
+    cv.classList.add('dragging');sel=null;startClock();
+  }
+  const off=(drag.axis==='r'?dx:dy)/cell;
+  const prev=Math.round(drag.off);drag.off=off;
+  if(Math.round(off)!==prev)tone(700,.02,'square',.015);
+  draw();
+});
+function endDrag(e){
+  if(!drag||e.pointerId!==drag.id)return;
+  const d=drag;cv.classList.remove('dragging');
+  if(!d.axis){drag=null;sel={r:d.r,c:d.c};draw();return}
+  const to=Math.round(d.off);
+  anim={t:d.axis,i:d.i,from:d.off,to,t0:performance.now(),dur:110,done:()=>{
+    const k=mod(to,N);if(k)doMove({t:d.axis,i:d.i,k});else draw();
+  }};
+  drag=null;draw();
+}
+cv.addEventListener('pointerup',endDrag);
+cv.addEventListener('pointercancel',endDrag);
+
+// ---------- Eingabe: Tastatur ----------
+document.addEventListener('keydown',e=>{
+  if(!$('startOv').classList.contains('hidden')||!$('winOv').classList.contains('hidden')){
+    if(e.key==='Enter'&&!$('winOv').classList.contains('hidden'))($('nextBtn').style.display==='none'?$('againBtn'):$('nextBtn')).click();
+    return;
+  }
+  const k=e.key;
+  if(k==='z'||k==='Z'||((e.ctrlKey||e.metaKey)&&k==='z')){e.preventDefault();undo();return}
+  if(k==='h'||k==='H'){hint();return}
+  if(k==='r'||k==='R'){resetPuzzle();return}
+  if(k==='Escape'){openMenu();return}
+  const dir={ArrowLeft:['r',-1],ArrowRight:['r',1],ArrowUp:['c',-1],ArrowDown:['c',1]}[k];
+  if(!dir||solved||anim)return;
+  e.preventDefault();
+  if(!sel){sel={r:0,c:0};draw();return}
+  if(e.shiftKey){ // Auswahl bewegen, ohne zu drehen
+    if(dir[0]==='r')sel.c=mod(sel.c+dir[1],N);else sel.r=mod(sel.r+dir[1],N);draw();return}
+  const t=dir[0],i=t==='r'?sel.r:sel.c,step=dir[1];
+  anim={t,i,from:0,to:step,t0:performance.now(),dur:110,done:()=>{
+    if(t==='r')sel.c=mod(sel.c+step,N);else sel.r=mod(sel.r+step,N);
+    doMove({t,i,k:mod(step,N)});
+  }};draw();
+});
+
+// ---------- Menü ----------
+function openMenu(){
+  if(inGame&&!solved){paused=true;stopClock()}
+  const done=ls.get('daily_'+todayKey(),null),d=dailySpec();
+  $('dailyBtn').textContent=(done?'✓ ':'📅 ')+'TAGESRÄTSEL #'+dailyNo();
+  $('dailyHint').textContent=done?`Heute gelöst: ${done.moves} Züge (Par ${done.par}) · weitere Runden sind Übung`
+    :`${d.n}×${d.n}${d.sunday?' · Sonntags-Spezial':''} · für alle dasselbe Rätsel · Par ${d.par}`;
+  $('levelsBtn').textContent='▶ STUFE '+level;
+  $('resumeBtn').style.display=paused&&inGame&&!solved?'':'none';
+  $('winOv').classList.add('hidden');$('startOv').classList.remove('hidden');
+}
+function go(m){$('startOv').classList.add('hidden');$('winOv').classList.add('hidden');newGame(m);tone(660,.1,'triangle',.05)}
+$('dailyBtn').onclick=()=>go('daily');
+$('levelsBtn').onclick=()=>go('levels');
+document.querySelectorAll('[data-free]').forEach(b=>b.onclick=()=>{freeN=+b.dataset.free;go('free')});
+$('resumeBtn').onclick=()=>{paused=false;$('startOv').classList.add('hidden');if(hist.length)startClock()};
+$('nextBtn').onclick=()=>go(mode);
+$('againBtn').onclick=()=>{if(mode==='levels'&&solved){level=Math.max(1,level-1)}go(mode)};
+$('menuBtn').onclick=()=>{inGame=false;openMenu()};
+$('helpBtn').onclick=openMenu;
+$('undoBtn').onclick=undo;$('resetBtn').onclick=resetPuzzle;$('hintBtn').onclick=hint;
+$('shareBtn').onclick=async()=>{
+  const txt=$('shareBox').textContent,b=$('shareBtn'),C=window.Capacitor;
+  const Native=C&&C.isNativePlatform&&C.isNativePlatform()&&((C.Plugins&&C.Plugins.Share)||(C.registerPlugin&&C.registerPlugin('Share')));
+  if(Native){try{await Native.share({text:txt,dialogTitle:'Ergebnis teilen'})}catch(e){}return}
+  try{if(navigator.share&&matchMedia('(hover:none)').matches){await navigator.share({text:txt});return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(txt);b.textContent='✓ KOPIERT'}
+  catch(e){const r=document.createRange();r.selectNodeContents($('shareBox'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='TEXT MARKIERT – KOPIEREN'}
+  setTimeout(()=>b.textContent='ERGEBNIS TEILEN',2000);
+};
+const sb=$('soundBtn');sb.textContent=sound?'🔊':'🔇';
+sb.onclick=()=>{sound=!sound;sb.textContent=sound?'🔊':'🔇';ls.set('sound',sound)};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&inGame&&!solved){stopClock()}else if(!document.hidden&&inGame&&!solved&&!paused&&hist.length){startClock()}});
+window.addEventListener('resize',layout);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>draw());
+
+newGame('levels');inGame=false;openMenu();
+if('serviceWorker' in navigator&&location.protocol==='https:'&&!window.Capacitor){try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
+window.__dw={apply,check,doMove,undo,hint,get state(){return{N,par,moves:hist.length,solved,mode,level,grid:copy(g),scr:scr.slice(),hints}}};
+})();
+</script>
+</body>
+</html>
